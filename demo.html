@@ -7,6 +7,7 @@
 
 		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
 
+		<script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
 		<script src="http://cytoscape.github.io/cytoscape.js/api/cytoscape.js-latest/cytoscape.min.js"></script>
 
 		<!-- for testing with local version of cytoscape.js -->
@@ -37,67 +38,56 @@
 		</style>
 
 		<script>
-			document.addEventListener('DOMContentLoaded', function(){
+		function loadGraph() {
+			var promise =
+				$.ajax({
+					url: 'network.cyjs'
+				}).then(
+					function(json) {
+						var data = JSON.parse(json);
+						return data.elements;
+					}
+				);
+			return promise;
+		}
 
-				var cy = window.cy = cytoscape({
-					container: document.getElementById('cy'),
+		document.addEventListener('DOMContentLoaded', function(){
 
-					style: [
-						{
-							selector: 'node',
-							style: {
-								'content': 'data(name)'
-							}
-						},
-
-						{
-							selector: 'edge',
-							style: {
-								'target-arrow-shape': 'triangle'
-							}
-						},
-
-						{
-							selector: ':selected',
-							style: {
-
-							}
-						}
-					],
-
-					elements: {
-						nodes: [
-							{ data: { id: 'j', name: 'Jerry' } },
-							{ data: { id: 'e', name: 'Elaine' } },
-							{ data: { id: 'k', name: 'Kramer' } },
-							{ data: { id: 'g', name: 'George' } }
-						],
-						edges: [
-							{ data: { source: 'j', target: 'e' } },
-							{ data: { source: 'j', target: 'k' } },
-							{ data: { source: 'j', target: 'g' } },
-							{ data: { source: 'e', target: 'j' } },
-							{ data: { source: 'e', target: 'k' } },
-							{ data: { source: 'k', target: 'j' } },
-							{ data: { source: 'k', target: 'e' } },
-							{ data: { source: 'k', target: 'g' } },
-							{ data: { source: 'g', target: 'j' } }
-						]
+			var cy = window.cy = cytoscape({
+				container: document.getElementById('cy'),
+				elements: loadGraph(),
+				layout: { name: 'preset' },
+				style: [
+					{
+						selector: 'node',
+						style: { 'content': 'data(name)' }
 					},
-				});
-
-				// demo your core ext
-				cy.cyjs-simple-cluster( /* args... */ );
-
+					{
+						selector: 'edge',
+						style: {	'target-arrow-shape': 'triangle' }
+					},
+					{
+						selector: ':selected',
+						style: { }
+					}
+				],
 			});
+
+			// demo your core ext
+			cy.on('load', function() {
+				var clusters = cy.cyjsSimpleCluster({ darts: 5 });
+				clusters.forEach(c => {
+					console.log("cluster: " + JSON.stringify(c.map(n => {return n.id();} )));
+				});
+			});
+
+		});
 		</script>
 	</head>
 
 	<body>
 		<h1>cytoscape-cyjs-simple-cluster demo</h1>
-
 		<div id="cy"></div>
-
 	</body>
 
 </html>
